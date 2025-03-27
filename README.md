@@ -14,6 +14,8 @@ With a solid foundation in telecommunications fundamentals and growing knowledge
 
 ## 💡 Project Overview
 
+[Project Link](radami2006.pythonanywhere.com)
+
 MicroBlog is a secure social networking application built with Flask, implementing industry-standard authentication practices and data protection measures. The platform demonstrates my ability to create scalable, maintainable, and secure web applications with modern architecture patterns.
 
 ### ✨ Key Technical Features
@@ -72,7 +74,7 @@ MicroBlog is a secure social networking application built with Flask, implementi
 
 1. Clone the repository
    ```
-   git clone https://github.com/yourusername/microblog.git
+   git clone https://github.com/radami2006/microblog.git
    cd microblog
    ```
 
