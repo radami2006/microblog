@@ -1,0 +1,647 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block head %}
+<style>
+    .post-detail-card {
+        border-radius: 16px;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+        margin-bottom: 1.5rem;
+        position: relative;
+    }
+    .post-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+    .post-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+    .post-meta {
+        margin-left: 1rem;
+    }
+    .post-username {
+        font-weight: 600;
+        margin: 0;
+        color: var(--bs-primary);
+    }
+    .post-timestamp {
+        font-size: 0.8rem;
+        color: var(--bs-secondary);
+        margin: 0;
+    }
+    .post-content {
+        white-space: pre-line;
+        margin-bottom: 1.5rem;
+        font-size: 1.1rem;
+    }
+    .post-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+    .post-interactions {
+        display: flex;
+        gap: 0.5rem;
+    }
+    .action-btn {
+        border-radius: 8px;
+        padding: 0.3rem 0.75rem;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+    .action-btn i {
+        font-size: 0.9rem;
+    }
+    .comment-form-card {
+        border-radius: 16px;
+        margin-bottom: 1.5rem;
+    }
+    .comments-section {
+        margin-top: 2rem;
+    }
+    .comments-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid #eee;
+    }
+    .comment-list {
+        max-height: 600px;
+        overflow-y: auto;
+        margin-bottom: 1.5rem;
+    }
+    .comment-card {
+        border-left: 3px solid var(--bs-primary);
+        padding-left: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    .comment-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 0.5rem;
+    }
+    .comment-user {
+        display: flex;
+        align-items: center;
+    }
+    .comment-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+    .comment-username {
+        margin-left: 0.8rem;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+    .comment-timestamp {
+        font-size: 0.8rem;
+        color: var(--bs-secondary);
+    }
+    .comment-body {
+        white-space: pre-line;
+        margin-top: 0.5rem;
+        font-size: 0.95rem;
+    }
+    .comment-actions {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 0.5rem;
+    }
+    .empty-comments {
+        text-align: center;
+        padding: 2rem;
+        background: rgba(0,0,0,0.02);
+        border-radius: 16px;
+        color: var(--bs-secondary);
+    }
+    .char-counter {
+        font-size: 0.8rem;
+        color: #6c757d;
+        text-align: right;
+    }
+    .comment-btn-sm {
+        font-size: 0.8rem;
+        padding: 0.25rem 0.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="mb-4">
+            <a href="{{ url_for('blog.index') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Posts
+            </a>
+        </div>
+        
+        <!-- Post Detail Card -->
+        <div class="card post-detail-card" data-aos="fade-up">
+            <div class="card-body p-4">
+                <div class="post-header">
+                    <a href="{{ url_for('blog.user', username=post.author.username) }}" class="text-decoration-none">
+                        <img src="{{ post.author.avatar_url() }}" class="post-avatar" alt="{{ post.author.username }}'s avatar">
+                    </a>
+                    <div class="post-meta">
+                        <a href="{{ url_for('blog.user', username=post.author.username) }}" class="text-decoration-none">
+                            <h5 class="post-username">{{ post.author.username }}</h5>
+                        </a>
+                        <p class="post-timestamp">
+                            <i class="far fa-clock me-1"></i>
+                            {{ post.timestamp.strftime('%b %d, %Y • %I:%M %p') }}
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="post-content">{{ post.body }}</div>
+                
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="post-interactions">
+                        {% if current_user.has_liked_post(post) %}
+                            <button class="btn btn-sm btn-outline-secondary action-btn like-btn" data-post-id="{{ post.id }}" data-liked="1">
+                                <i class="fas fa-heart text-danger"></i> <span>{{ post.get_likes_count() }}</span>
+                            </button>
+                        {% else %}
+                            <button class="btn btn-sm btn-outline-secondary action-btn like-btn" data-post-id="{{ post.id }}" data-liked="0">
+                                <i class="far fa-heart"></i> <span>{{ post.get_likes_count() }}</span>
+                            </button>
+                        {% endif %}
+                        <button class="btn btn-sm btn-outline-secondary action-btn" disabled>
+                            <i class="far fa-comment"></i> <span>{{ post.get_comments_count() }}</span>
+                        </button>
+                    </div>
+                    
+                    {% if post.author == current_user %}
+                        <div class="post-actions">
+                            <a href="{{ url_for('blog.edit', id=post.id) }}" class="btn btn-sm btn-outline-secondary action-btn">
+                                <i class="fas fa-edit"></i> Edit
+                            </a>
+                            <form action="{{ url_for('blog.delete', id=post.id) }}" method="post" class="d-inline">
+                                <button type="submit" class="btn btn-sm btn-outline-danger action-btn" 
+                                    onclick="return confirm('Are you sure you want to delete this post?');">
+                                    <i class="fas fa-trash-alt"></i> Delete
+                                </button>
+                            </form>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Comment Form -->
+        <div class="card comment-form-card" data-aos="fade-up" data-aos-delay="100">
+            <div class="card-body p-4">
+                <h5 class="mb-3"><i class="far fa-comment me-2"></i>Leave a Comment</h5>
+                <form action="" method="post" id="comment-form">
+                    {{ form.hidden_tag() }}
+                    <div class="form-floating mb-3">
+                        {{ form.body(class="form-control", placeholder="Write a comment...", id="comment-textarea", style="height: 100px;") }}
+                        <label for="comment-textarea">Write a comment...</label>
+                        {% for error in form.body.errors %}
+                            <div class="invalid-feedback d-block">{{ error }}</div>
+                        {% endfor %}
+                        <div class="char-counter mt-1"><span id="char-count">0</span>/500</div>
+                    </div>
+                    <div class="text-end">
+                        {{ form.submit(class="btn btn-primary", data_loading_text="Posting...") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Comments Section -->
+        <div class="comments-section">
+            <div class="comments-header" data-aos="fade-up" data-aos-delay="150">
+                <h4><i class="fas fa-comments me-2"></i>Comments ({{ comments|length }})</h4>
+                <div>
+                    <button class="btn btn-sm btn-outline-secondary" id="refresh-comments">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
+            </div>
+            
+            <div id="comments-container">
+                {% if comments %}
+                    <div class="comment-list" id="comment-list">
+                        {% for comment in comments %}
+                            <div class="comment-card" data-aos="fade-up" data-aos-delay="{{ loop.index * 50 }}" id="comment-{{ comment.id }}">
+                                <div class="comment-header">
+                                    <div class="comment-user">
+                                        <a href="{{ url_for('blog.user', username=comment.user.username) }}">
+                                            <img src="{{ comment.user.avatar_url() }}" class="comment-avatar" alt="{{ comment.user.username }}">
+                                        </a>
+                                        <div>
+                                            <a href="{{ url_for('blog.user', username=comment.user.username) }}" class="text-decoration-none">
+                                                <span class="comment-username">{{ comment.user.username }}</span>
+                                            </a>
+                                            <div class="comment-timestamp">{{ comment.timestamp.strftime('%b %d, %Y • %I:%M %p') }}</div>
+                                        </div>
+                                    </div>
+                                    
+                                    {% if comment.user == current_user or post.author == current_user %}
+                                        <div>
+                                            <button class="btn btn-sm btn-outline-danger comment-btn-sm delete-comment-btn" 
+                                                    data-comment-id="{{ comment.id }}">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="comment-body">{{ comment.body }}</div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="empty-comments" data-aos="fade-up" data-aos-delay="150" id="no-comments-message">
+                        <i class="far fa-comment-dots fa-3x mb-3"></i>
+                        <h5>No comments yet</h5>
+                        <p>Be the first to comment on this post!</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4 d-none d-lg-block">
+        <div class="sidebar" style="position: sticky; top: 5rem;">
+            <div class="card sidebar-card" data-aos="fade-left">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fas fa-info-circle me-2"></i>About the Author</h5>
+                    <div class="d-flex align-items-center mb-3">
+                        <img src="{{ post.author.avatar_url() }}" alt="{{ post.author.username }}" 
+                             style="width: 64px; height: 64px; border-radius: 50%; object-fit: cover;">
+                        <div class="ms-3">
+                            <h5 class="mb-1">{{ post.author.username }}</h5>
+                            {% if post.author.location %}
+                                <p class="mb-0 text-muted"><i class="fas fa-map-marker-alt me-1"></i>{{ post.author.location }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    {% if post.author.bio %}
+                        <p class="mb-3">{{ post.author.bio }}</p>
+                    {% endif %}
+                    
+                    <a href="{{ url_for('blog.user', username=post.author.username) }}" class="btn btn-outline-primary w-100">
+                        <i class="fas fa-user me-2"></i>View Profile
+                    </a>
+                </div>
+            </div>
+            
+            <div class="card sidebar-card mt-4" data-aos="fade-left" data-aos-delay="100">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fas fa-share-alt me-2"></i>Share</h5>
+                    <div class="d-flex gap-2 mt-3">
+                        <button class="btn btn-outline-primary flex-grow-1">
+                            <i class="fab fa-twitter"></i>
+                        </button>
+                        <button class="btn btn-outline-primary flex-grow-1">
+                            <i class="fab fa-facebook-f"></i>
+                        </button>
+                        <button class="btn btn-outline-primary flex-grow-1">
+                            <i class="fab fa-linkedin-in"></i>
+                        </button>
+                        <button class="btn btn-outline-primary flex-grow-1" onclick="copyPostLink()">
+                            <i class="fas fa-link"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Comment Confirmation Modal -->
+<div class="modal fade" id="deleteCommentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Delete Comment</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this comment? This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="delete-comment-form" action="" method="post">
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const commentsContainer = document.getElementById('comments-container');
+        
+        // Character counter for comment form
+        const commentTextarea = document.getElementById('comment-textarea');
+        const charCounter = document.getElementById('char-count');
+        const MAX_CHARS = 500;
+        
+        function updateCharCount() {
+            const count = commentTextarea.value.length;
+            charCounter.textContent = count;
+            
+            if (count > MAX_CHARS) {
+                charCounter.classList.add('text-danger');
+                charCounter.classList.add('fw-bold');
+            } else {
+                charCounter.classList.remove('text-danger');
+                charCounter.classList.remove('fw-bold');
+            }
+        }
+        
+        if (commentTextarea) {
+            commentTextarea.addEventListener('input', updateCharCount);
+            updateCharCount(); // Initialize
+        }
+        
+        // Comment form submission with loading state
+        const commentForm = document.getElementById('comment-form');
+        if (commentForm) {
+            commentForm.addEventListener('submit', function(e) {
+                const submitButton = this.querySelector('button[type="submit"]');
+                LoadingState.buttonLoading(submitButton, true);
+            });
+        }
+        
+        // Post like functionality with AJAX
+        const likeButtons = document.querySelectorAll('.like-btn');
+        likeButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const postId = this.getAttribute('data-post-id');
+                const isLiked = this.getAttribute('data-liked') === '1';
+                const icon = this.querySelector('i');
+                const count = this.querySelector('span');
+                const url = isLiked 
+                    ? `/unlike/${postId}` 
+                    : `/like/${postId}`;
+                
+                // Add loading state to the button
+                LoadingState.buttonLoading(this, true);
+                
+                // Send AJAX request
+                fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'same-origin'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Update like count
+                        count.textContent = data.likes_count;
+                        
+                        // Toggle like status
+                        if (isLiked) {
+                            icon.classList.remove('fas', 'text-danger');
+                            icon.classList.add('far');
+                            this.setAttribute('data-liked', '0');
+                        } else {
+                            icon.classList.remove('far');
+                            icon.classList.add('fas', 'text-danger');
+                            this.setAttribute('data-liked', '1');
+                        }
+                        
+                        // Add a little bounce animation
+                        button.style.transform = 'scale(1.2)';
+                        setTimeout(() => {
+                            button.style.transform = 'scale(1)';
+                        }, 200);
+                    }
+                    
+                    // Remove loading state
+                    LoadingState.buttonLoading(this, false);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    // Remove loading state on error
+                    LoadingState.buttonLoading(this, false);
+                });
+            });
+        });
+        
+        // Delete comment functionality
+        const deleteCommentButtons = document.querySelectorAll('.delete-comment-btn');
+        const deleteCommentForm = document.getElementById('delete-comment-form');
+        const deleteCommentModal = new bootstrap.Modal(document.getElementById('deleteCommentModal'));
+        
+        deleteCommentButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const commentId = this.getAttribute('data-comment-id');
+                deleteCommentForm.action = `/comment/${commentId}/delete`;
+                deleteCommentModal.show();
+            });
+        });
+        
+        // Submit delete comment form with AJAX
+        deleteCommentForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Get the submit button
+            const submitButton = this.querySelector('button[type="submit"]');
+            LoadingState.buttonLoading(submitButton, true);
+            
+            fetch(this.action, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'same-origin'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Hide the modal
+                    deleteCommentModal.hide();
+                    
+                    // Remove the comment from the DOM
+                    const commentId = this.action.split('/').pop().replace('/delete', '');
+                    const commentElement = document.getElementById(`comment-${commentId}`);
+                    if (commentElement) {
+                        commentElement.remove();
+                        
+                        // Update comment count
+                        const commentCountEl = document.querySelector('.comments-header h4');
+                        const currentCount = parseInt(commentCountEl.innerText.match(/\d+/)[0]) - 1;
+                        commentCountEl.innerHTML = `<i class="fas fa-comments me-2"></i>Comments (${currentCount})`;
+                        
+                        // Show "no comments" message if there are no more comments
+                        if (currentCount === 0) {
+                            const commentList = document.getElementById('comment-list');
+                            commentList.innerHTML = `
+                            <div class="empty-comments" data-aos="fade-up" id="no-comments-message">
+                                <i class="far fa-comment-dots fa-3x mb-3"></i>
+                                <h5>No comments yet</h5>
+                                <p>Be the first to comment on this post!</p>
+                            </div>`;
+                        }
+                    }
+                }
+                
+                // Reset button state
+                LoadingState.buttonLoading(submitButton, false);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                // Reset button state on error
+                LoadingState.buttonLoading(submitButton, false);
+            });
+        });
+        
+        // Refresh comments functionality
+        const refreshButton = document.getElementById('refresh-comments');
+        refreshButton.addEventListener('click', function() {
+            // Show loading state
+            LoadingState.buttonLoading(this, true);
+            
+            // Show skeleton loading for comments
+            if (commentsContainer) {
+                LoadingState.contentLoading(commentsContainer, true, 2);
+            }
+            
+            // Fetch updated comments
+            fetch(`/load_comments/{{ post.id }}`, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                const commentList = document.getElementById('comment-list') || document.createElement('div');
+                commentList.id = 'comment-list';
+                commentList.className = 'comment-list';
+                
+                // Update comment count
+                const commentCountEl = document.querySelector('.comments-header h4');
+                commentCountEl.innerHTML = `<i class="fas fa-comments me-2"></i>Comments (${data.count})`;
+                
+                // Clear the existing comments
+                commentList.innerHTML = '';
+                
+                if (data.count > 0) {
+                    // Remove the "no comments" message if it exists
+                    const noCommentsMessage = document.getElementById('no-comments-message');
+                    if (noCommentsMessage) {
+                        noCommentsMessage.remove();
+                    }
+                    
+                    // Add the comment list to the DOM if it's not there
+                    if (!document.getElementById('comment-list')) {
+                        commentsContainer.innerHTML = '';
+                        commentsContainer.appendChild(commentList);
+                    }
+                    
+                    // Append the comments
+                    data.comments.forEach((comment, index) => {
+                        const commentHtml = `
+                        <div class="comment-card" data-aos="fade-up" data-aos-delay="${index * 50}" id="comment-${comment.id}">
+                            <div class="comment-header">
+                                <div class="comment-user">
+                                    <a href="/user/${comment.username}">
+                                        <img src="${comment.user_avatar}" class="comment-avatar" alt="${comment.username}">
+                                    </a>
+                                    <div>
+                                        <a href="/user/${comment.username}" class="text-decoration-none">
+                                            <span class="comment-username">${comment.username}</span>
+                                        </a>
+                                        <div class="comment-timestamp">${comment.timestamp}</div>
+                                    </div>
+                                </div>
+                                
+                                ${comment.is_author ? `
+                                <div>
+                                    <button class="btn btn-sm btn-outline-danger comment-btn-sm delete-comment-btn" 
+                                            data-comment-id="${comment.id}">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </div>
+                                ` : ''}
+                            </div>
+                            
+                            <div class="comment-body">${comment.body}</div>
+                        </div>`;
+                        
+                        commentList.insertAdjacentHTML('beforeend', commentHtml);
+                    });
+                    
+                    // Reinitialize delete buttons
+                    const deleteButtons = document.querySelectorAll('.delete-comment-btn');
+                    deleteButtons.forEach(button => {
+                        button.addEventListener('click', function() {
+                            const commentId = this.getAttribute('data-comment-id');
+                            deleteCommentForm.action = `/comment/${commentId}/delete`;
+                            deleteCommentModal.show();
+                        });
+                    });
+                } else {
+                    // Show "no comments" message
+                    commentsContainer.innerHTML = `
+                    <div class="empty-comments" data-aos="fade-up" id="no-comments-message">
+                        <i class="far fa-comment-dots fa-3x mb-3"></i>
+                        <h5>No comments yet</h5>
+                        <p>Be the first to comment on this post!</p>
+                    </div>`;
+                }
+                
+                // Reset refresh button
+                LoadingState.buttonLoading(refreshButton, false);
+                
+                // Reinitialize AOS
+                AOS.refresh();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                
+                // Reset refresh button
+                LoadingState.buttonLoading(refreshButton, false);
+                
+                // Restore original content
+                if (commentsContainer.hasAttribute('data-original-content')) {
+                    commentsContainer.innerHTML = commentsContainer.getAttribute('data-original-content');
+                }
+            });
+        });
+        
+        // Simulate a short loading time for the comments container when page loads
+        if (commentsContainer) {
+            const originalContent = commentsContainer.innerHTML;
+            LoadingState.contentLoading(commentsContainer, true, 2);
+            
+            setTimeout(() => {
+                commentsContainer.innerHTML = originalContent;
+                // Reinitialize AOS
+                AOS.refresh();
+            }, 800);
+        }
+        
+        // Function to copy post link
+        window.copyPostLink = function() {
+            const url = window.location.href;
+            navigator.clipboard.writeText(url).then(() => {
+                alert('Link copied to clipboard!');
+            });
+        }
+    });
+</script>
+{% endblock %}

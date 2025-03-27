@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+
+{% block title %}Sign In{% endblock %}
+
+{% block head %}
+<style>
+    .auth-container {
+        max-width: 500px;
+        margin: 2rem auto;
+    }
+    .auth-card {
+        border-radius: 16px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        overflow: hidden;
+        border: none;
+    }
+    .auth-header {
+        background: linear-gradient(135deg, #6e8efb, #4766f4);
+        padding: 2rem;
+        color: white;
+        text-align: center;
+    }
+    .auth-header-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        display: inline-block;
+        background: rgba(255,255,255,0.2);
+        width: 80px;
+        height: 80px;
+        line-height: 80px;
+        border-radius: 50%;
+    }
+    .auth-form {
+        padding: 2rem;
+    }
+    .form-floating {
+        margin-bottom: 1.25rem;
+    }
+    .form-control {
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        height: calc(3rem + 2px);
+    }
+    .form-floating label {
+        padding: 0.75rem 1rem;
+    }
+    .btn-auth {
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        font-weight: 600;
+        width: 100%;
+        background: linear-gradient(135deg, #6e8efb, #4766f4);
+        border: none;
+    }
+    .btn-auth:hover {
+        background: linear-gradient(135deg, #4766f4, #3b56d3);
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(71, 102, 244, 0.4);
+    }
+    .auth-footer {
+        text-align: center;
+        padding: 1rem 2rem 2rem;
+        border-top: 1px solid #f0f0f0;
+    }
+    .auth-link {
+        color: #4766f4;
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.3s;
+    }
+    .auth-link:hover {
+        color: #3b56d3;
+        text-decoration: underline;
+    }
+    .input-icon {
+        position: absolute;
+        top: 50%;
+        right: 1rem;
+        transform: translateY(-50%);
+        color: #6c757d;
+        cursor: pointer;
+        z-index: 10;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-container" data-aos="fade-up" data-aos-duration="1000">
+    <div class="card auth-card">
+        <div class="auth-header">
+            <div class="auth-header-icon">
+                <i class="fas fa-user"></i>
+            </div>
+            <h1 class="h3">Welcome Back</h1>
+            <p class="mb-0">Sign in to continue to Microblog</p>
+        </div>
+        
+        <div class="auth-form">
+            <form action="" method="post" novalidate>
+                {{ form.hidden_tag() }}
+                
+                <div class="form-floating position-relative">
+                    {{ form.username(class="form-control", id="username", placeholder="Username") }}
+                    <label for="username"><i class="fas fa-user me-2"></i>Username</label>
+                    {% for error in form.username.errors %}
+                        <div class="invalid-feedback d-block">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                
+                <div class="form-floating position-relative">
+                    {{ form.password(class="form-control", id="password", placeholder="Password", type="password") }}
+                    <label for="password"><i class="fas fa-lock me-2"></i>Password</label>
+                    <span class="input-icon toggle-password" title="Show/Hide Password">
+                        <i class="far fa-eye"></i>
+                    </span>
+                    {% for error in form.password.errors %}
+                        <div class="invalid-feedback d-block">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="remember-me">
+                        <label class="form-check-label" for="remember-me">Remember me</label>
+                    </div>
+                    <a href="#" class="auth-link">Forgot Password?</a>
+                </div>
+                
+                <div class="mb-3">
+                    {{ form.submit(class="btn btn-primary btn-auth", value="Sign In") }}
+                </div>
+            </form>
+        </div>
+        
+        <div class="auth-footer">
+            <p class="mb-0">New to Microblog? <a href="{{ url_for('auth.register') }}" class="auth-link">Create an Account</a></p>
+        </div>
+    </div>
+    
+    <div class="text-center mt-4">
+        <p class="text-muted">© 2025 Microblog. All rights reserved.</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Password visibility toggle
+        const togglePassword = document.querySelector('.toggle-password');
+        const passwordInput = document.getElementById('password');
+        
+        if (togglePassword) {
+            togglePassword.addEventListener('click', function() {
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                
+                // Toggle eye icon
+                const icon = this.querySelector('i');
+                if (type === 'password') {
+                    icon.classList.remove('fa-eye-slash');
+                    icon.classList.add('fa-eye');
+                } else {
+                    icon.classList.remove('fa-eye');
+                    icon.classList.add('fa-eye-slash');
+                }
+            });
+        }
+        
+        // Add floating effect on form submission
+        const form = document.querySelector('form');
+        form.addEventListener('submit', function() {
+            const authCard = document.querySelector('.auth-card');
+            authCard.style.transform = 'translateY(-10px)';
+            authCard.style.boxShadow = '0 15px 40px rgba(0,0,0,0.2)';
+        });
+    });
+</script>
+{% endblock %}

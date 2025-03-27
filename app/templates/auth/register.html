@@ -1,0 +1,327 @@
+{% extends "base.html" %}
+
+{% block title %}Register{% endblock %}
+
+{% block head %}
+<style>
+    .auth-container {
+        max-width: 550px;
+        margin: 2rem auto;
+    }
+    .auth-card {
+        border-radius: 16px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        overflow: hidden;
+        border: none;
+    }
+    .auth-header {
+        background: linear-gradient(135deg, #6e8efb, #4766f4);
+        padding: 2rem;
+        color: white;
+        text-align: center;
+    }
+    .auth-header-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        display: inline-block;
+        background: rgba(255,255,255,0.2);
+        width: 80px;
+        height: 80px;
+        line-height: 80px;
+        border-radius: 50%;
+    }
+    .auth-form {
+        padding: 2rem;
+    }
+    .form-floating {
+        margin-bottom: 1.25rem;
+    }
+    .form-control {
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        height: calc(3rem + 2px);
+    }
+    .form-floating label {
+        padding: 0.75rem 1rem;
+    }
+    .btn-auth {
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        font-weight: 600;
+        width: 100%;
+        background: linear-gradient(135deg, #6e8efb, #4766f4);
+        border: none;
+    }
+    .btn-auth:hover {
+        background: linear-gradient(135deg, #4766f4, #3b56d3);
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(71, 102, 244, 0.4);
+    }
+    .auth-footer {
+        text-align: center;
+        padding: 1rem 2rem 2rem;
+        border-top: 1px solid #f0f0f0;
+    }
+    .auth-link {
+        color: #4766f4;
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.3s;
+    }
+    .auth-link:hover {
+        color: #3b56d3;
+        text-decoration: underline;
+    }
+    .input-icon {
+        position: absolute;
+        top: 50%;
+        right: 1rem;
+        transform: translateY(-50%);
+        color: #6c757d;
+        cursor: pointer;
+        z-index: 10;
+    }
+    .password-strength {
+        height: 5px;
+        border-radius: 5px;
+        margin-top: 5px;
+        transition: all 0.3s;
+        background: #e9ecef;
+    }
+    .password-strength-text {
+        font-size: 0.8rem;
+        margin-top: 5px;
+        color: #6c757d;
+    }
+    .step-indicator {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 1.5rem;
+    }
+    .step-indicator-item {
+        width: 10px;
+        height: 10px;
+        margin: 0 5px;
+        border-radius: 50%;
+        background-color: #e9ecef;
+        opacity: 0.7;
+        transition: all 0.3s ease;
+    }
+    .step-indicator-item.active {
+        background-color: white;
+        opacity: 1;
+        transform: scale(1.2);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-container" data-aos="fade-up" data-aos-duration="1000">
+    <div class="card auth-card">
+        <div class="auth-header">
+            <div class="auth-header-icon">
+                <i class="fas fa-user-plus"></i>
+            </div>
+            <h1 class="h3">Create Account</h1>
+            <p class="mb-0">Join Microblog and start sharing your thoughts</p>
+            
+            <div class="step-indicator mt-4">
+                <div class="step-indicator-item active"></div>
+                <div class="step-indicator-item"></div>
+                <div class="step-indicator-item"></div>
+            </div>
+        </div>
+        
+        <div class="auth-form">
+            <form action="" method="post" novalidate id="register-form">
+                {{ form.hidden_tag() }}
+                
+                <div class="form-floating position-relative">
+                    {{ form.username(class="form-control", id="username", placeholder="Username") }}
+                    <label for="username"><i class="fas fa-user me-2"></i>Username</label>
+                    {% for error in form.username.errors %}
+                        <div class="invalid-feedback d-block">{{ error }}</div>
+                    {% endfor %}
+                    <small class="form-text text-muted">Choose a unique username for your account</small>
+                </div>
+                
+                <div class="form-floating position-relative">
+                    {{ form.email(class="form-control", id="email", placeholder="Email") }}
+                    <label for="email"><i class="fas fa-envelope me-2"></i>Email</label>
+                    {% for error in form.email.errors %}
+                        <div class="invalid-feedback d-block">{{ error }}</div>
+                    {% endfor %}
+                    <small class="form-text text-muted">We'll never share your email with anyone else</small>
+                </div>
+                
+                <div class="form-floating position-relative">
+                    {{ form.password(class="form-control", id="password", placeholder="Password", type="password") }}
+                    <label for="password"><i class="fas fa-lock me-2"></i>Password</label>
+                    <span class="input-icon toggle-password" title="Show/Hide Password">
+                        <i class="far fa-eye"></i>
+                    </span>
+                    {% for error in form.password.errors %}
+                        <div class="invalid-feedback d-block">{{ error }}</div>
+                    {% endfor %}
+                    <div class="password-strength" id="password-strength"></div>
+                    <div class="password-strength-text" id="password-strength-text">Password strength: Type to check</div>
+                </div>
+                
+                <div class="form-floating position-relative">
+                    {{ form.password2(class="form-control", id="password2", placeholder="Repeat Password", type="password") }}
+                    <label for="password2"><i class="fas fa-lock me-2"></i>Repeat Password</label>
+                    <span class="input-icon toggle-password2" title="Show/Hide Password">
+                        <i class="far fa-eye"></i>
+                    </span>
+                    {% for error in form.password2.errors %}
+                        <div class="invalid-feedback d-block">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                
+                <div class="form-check mb-4">
+                    <input class="form-check-input" type="checkbox" id="terms" required>
+                    <label class="form-check-label" for="terms">
+                        I agree to the <a href="#" class="auth-link">Terms of Service</a> and <a href="#" class="auth-link">Privacy Policy</a>
+                    </label>
+                </div>
+                
+                <div class="mb-3">
+                    {{ form.submit(class="btn btn-primary btn-auth", value="Create Account") }}
+                </div>
+            </form>
+        </div>
+        
+        <div class="auth-footer">
+            <p class="mb-0">Already have an account? <a href="{{ url_for('auth.login') }}" class="auth-link">Sign In</a></p>
+        </div>
+    </div>
+    
+    <div class="text-center mt-4">
+        <p class="text-muted">© 2025 Microblog. All rights reserved.</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Password visibility toggle
+        const toggleElements = document.querySelectorAll('.toggle-password, .toggle-password2');
+        
+        toggleElements.forEach(toggle => {
+            toggle.addEventListener('click', function() {
+                const passwordId = this.classList.contains('toggle-password') ? 'password' : 'password2';
+                const passwordInput = document.getElementById(passwordId);
+                
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                
+                // Toggle eye icon
+                const icon = this.querySelector('i');
+                if (type === 'password') {
+                    icon.classList.remove('fa-eye-slash');
+                    icon.classList.add('fa-eye');
+                } else {
+                    icon.classList.remove('fa-eye');
+                    icon.classList.add('fa-eye-slash');
+                }
+            });
+        });
+        
+        // Password strength meter
+        const passwordInput = document.getElementById('password');
+        const strengthBar = document.getElementById('password-strength');
+        const strengthText = document.getElementById('password-strength-text');
+        
+        passwordInput.addEventListener('input', function() {
+            const password = this.value;
+            let strength = 0;
+            let message = '';
+            
+            if (password.length > 0) {
+                // Length check
+                strength += password.length > 6 ? 1 : 0;
+                
+                // Uppercase letter check
+                if (password.match(/[A-Z]/)) {
+                    strength += 1;
+                }
+                
+                // Lowercase letter check
+                if (password.match(/[a-z]/)) {
+                    strength += 1;
+                }
+                
+                // Number check
+                if (password.match(/[0-9]/)) {
+                    strength += 1;
+                }
+                
+                // Special character check
+                if (password.match(/[^A-Za-z0-9]/)) {
+                    strength += 1;
+                }
+                
+                // Set the strength bar width and color
+                switch(strength) {
+                    case 0:
+                    case 1:
+                        strengthBar.style.width = '20%';
+                        strengthBar.style.backgroundColor = '#dc3545';
+                        message = 'Password strength: Very weak';
+                        break;
+                    case 2:
+                        strengthBar.style.width = '40%';
+                        strengthBar.style.backgroundColor = '#ffc107';
+                        message = 'Password strength: Weak';
+                        break;
+                    case 3:
+                        strengthBar.style.width = '60%';
+                        strengthBar.style.backgroundColor = '#fd7e14';
+                        message = 'Password strength: Medium';
+                        break;
+                    case 4:
+                        strengthBar.style.width = '80%';
+                        strengthBar.style.backgroundColor = '#20c997';
+                        message = 'Password strength: Strong';
+                        break;
+                    case 5:
+                        strengthBar.style.width = '100%';
+                        strengthBar.style.backgroundColor = '#198754';
+                        message = 'Password strength: Very strong';
+                        break;
+                }
+            } else {
+                strengthBar.style.width = '0%';
+                message = 'Password strength: Type to check';
+            }
+            
+            strengthText.textContent = message;
+        });
+        
+        // Form animation
+        document.querySelectorAll('.form-floating input').forEach(input => {
+            input.addEventListener('focus', function() {
+                this.parentNode.style.transform = 'translateY(-2px)';
+                this.parentNode.style.transition = 'all 0.3s ease';
+            });
+            
+            input.addEventListener('blur', function() {
+                this.parentNode.style.transform = 'translateY(0)';
+            });
+        });
+        
+        // Form validation
+        const registerForm = document.getElementById('register-form');
+        const password2Input = document.getElementById('password2');
+        
+        password2Input.addEventListener('input', function() {
+            if (this.value !== passwordInput.value) {
+                this.setCustomValidity("Passwords don't match");
+            } else {
+                this.setCustomValidity('');
+            }
+        });
+    });
+</script>
+{% endblock %}

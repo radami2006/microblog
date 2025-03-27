@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Profile{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8" data-aos="fade-up">
+        <div class="profile-edit-header mb-4">
+            <i class="fas fa-user-edit"></i>
+            <h1>Edit Your Profile</h1>
+        </div>
+        
+        <div class="card profile-edit-card" data-aos="fade-up">
+            <div class="card-body p-4">
+                <form action="" method="post" enctype="multipart/form-data">
+                    {{ form.hidden_tag() }}
+                    
+                    <!-- Profile Pictures Section -->
+                    <div class="form-section">
+                        <h3 class="form-section-title"><i class="fas fa-camera me-2"></i>Profile Pictures</h3>
+                        <div class="row">
+                            <!-- Avatar Upload -->
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Avatar</label>
+                                <div class="text-center">
+                                    <img src="{{ current_user.avatar_url() }}" alt="Avatar preview" class="preview-avatar" id="avatar-preview">
+                                    <div class="mt-2">
+                                        {{ form.avatar(class="form-control", id="avatar-input") }}
+                                        {% for error in form.avatar.errors %}
+                                            <div class="invalid-feedback d-block">{{ error }}</div>
+                                        {% endfor %}
+                                        <div class="form-text">Recommended size: 200x200 pixels</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Cover Image Upload -->
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Cover Image</label>
+                                <div class="text-center">
+                                    <img src="{{ current_user.cover_url() }}" alt="Cover preview" class="preview-cover" id="cover-preview">
+                                    <div class="mt-2">
+                                        {{ form.cover_image(class="form-control", id="cover-input") }}
+                                        {% for error in form.cover_image.errors %}
+                                            <div class="invalid-feedback d-block">{{ error }}</div>
+                                        {% endfor %}
+                                        <div class="form-text">Recommended size: 1200x400 pixels</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Profile Info Section -->
+                    <div class="form-section">
+                        <h3 class="form-section-title"><i class="fas fa-info-circle me-2"></i>Profile Information</h3>
+                        
+                        <!-- Bio -->
+                        <div class="mb-3">
+                            {{ form.bio.label(class="form-label") }}
+                            {{ form.bio(class="form-control", rows=3) }}
+                            {% for error in form.bio.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                            <div class="form-text">Tell others a bit about yourself (maximum 200 characters)</div>
+                        </div>
+                        
+                        <!-- Location -->
+                        <div class="mb-3">
+                            {{ form.location.label(class="form-label") }}
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-map-marker-alt"></i></span>
+                                {{ form.location(class="form-control") }}
+                            </div>
+                            {% for error in form.location.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <!-- Social Media Links Section -->
+                    <div class="form-section">
+                        <h3 class="form-section-title"><i class="fas fa-link me-2"></i>Social Media Links</h3>
+                        
+                        <!-- Twitter URL -->
+                        <div class="mb-3">
+                            {{ form.twitter_url.label(class="form-label") }}
+                            <div class="social-input">
+                                <i class="fab fa-twitter"></i>
+                                {{ form.twitter_url(class="form-control") }}
+                            </div>
+                            {% for error in form.twitter_url.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        
+                        <!-- Instagram URL -->
+                        <div class="mb-3">
+                            {{ form.instagram_url.label(class="form-label") }}
+                            <div class="social-input">
+                                <i class="fab fa-instagram"></i>
+                                {{ form.instagram_url(class="form-control") }}
+                            </div>
+                            {% for error in form.instagram_url.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        
+                        <!-- GitHub URL -->
+                        <div class="mb-3">
+                            {{ form.github_url.label(class="form-label") }}
+                            <div class="social-input">
+                                <i class="fab fa-github"></i>
+                                {{ form.github_url(class="form-control") }}
+                            </div>
+                            {% for error in form.github_url.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        
+                        <!-- Website URL -->
+                        <div class="mb-3">
+                            {{ form.website_url.label(class="form-label") }}
+                            <div class="social-input">
+                                <i class="fas fa-globe"></i>
+                                {{ form.website_url(class="form-control") }}
+                            </div>
+                            {% for error in form.website_url.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <!-- Form Actions -->
+                    <div class="d-flex justify-content-end gap-2 mt-4">
+                        <a href="{{ url_for('blog.user', username=current_user.username) }}" class="btn btn-outline-secondary action-btn">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                        {{ form.submit(class="btn btn-primary action-btn") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Preview avatar image before upload
+        const avatarInput = document.getElementById('avatar-input');
+        const avatarPreview = document.getElementById('avatar-preview');
+        
+        avatarInput.addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    avatarPreview.src = e.target.result;
+                };
+                reader.readAsDataURL(this.files[0]);
+            }
+        });
+        
+        // Preview cover image before upload
+        const coverInput = document.getElementById('cover-input');
+        const coverPreview = document.getElementById('cover-preview');
+        
+        coverInput.addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    coverPreview.src = e.target.result;
+                };
+                reader.readAsDataURL(this.files[0]);
+            }
+        });
+    });
+</script>
+{% endblock %}

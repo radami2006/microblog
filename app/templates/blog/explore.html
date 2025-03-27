@@ -1,0 +1,317 @@
+{% extends "base.html" %}
+
+{% block title %}Explore{% endblock %}
+
+{% block head %}
+<style>
+    .post-card {
+        border-radius: 16px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        margin-bottom: 1.5rem;
+    }
+    .post-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
+    .post-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+    .post-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+    .post-meta {
+        margin-left: 1rem;
+    }
+    .post-username {
+        font-weight: 600;
+        margin: 0;
+        color: var(--bs-primary);
+    }
+    .post-timestamp {
+        font-size: 0.8rem;
+        color: var(--bs-secondary);
+        margin: 0;
+    }
+    .post-content {
+        white-space: pre-line;
+        margin-bottom: 1.5rem;
+        font-size: 1.05rem;
+    }
+    .post-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+    .action-btn {
+        border-radius: 8px;
+        padding: 0.3rem 0.75rem;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+    .action-btn i {
+        font-size: 0.9rem;
+    }
+    .explore-header {
+        background: linear-gradient(135deg, #6e8efb, #4766f4);
+        border-radius: 16px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        color: white;
+        position: relative;
+        overflow: hidden;
+    }
+    .explore-header::after {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200px;
+        height: 200px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.1);
+        z-index: 0;
+    }
+    .explore-header h1 {
+        margin: 0;
+        font-weight: 700;
+        position: relative;
+        z-index: 1;
+    }
+    .explore-header p {
+        margin: 0.5rem 0 0;
+        opacity: 0.9;
+        position: relative;
+        z-index: 1;
+    }
+    .sidebar {
+        position: sticky;
+        top: 5rem;
+    }
+    .sidebar-card {
+        border-radius: 16px;
+        margin-bottom: 1.5rem;
+    }
+    .pagination {
+        justify-content: center;
+    }
+    .page-item.active .page-link {
+        background-color: #4766f4;
+        border-color: #4766f4;
+    }
+    .empty-posts {
+        text-align: center;
+        padding: 3rem 1rem;
+        background: rgba(0,0,0,0.02);
+        border-radius: 16px;
+    }
+    .empty-posts i {
+        font-size: 3rem;
+        color: #d1d1d1;
+        margin-bottom: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8" data-aos="fade-up">
+        <div class="explore-header">
+            <h1>Explore</h1>
+            <p>Discover posts from all users</p>
+        </div>
+        
+        {% if posts.items %}
+            <div class="posts-container">
+                {% for post in posts.items %}
+                    <div class="card post-card" data-aos="fade-up" data-aos-delay="{{ loop.index * 50 }}">
+                        <div class="card-body">
+                            <div class="post-header">
+                                <a href="{{ url_for('blog.user', username=post.author.username) }}" class="text-decoration-none">
+                                    <img src="{{ post.author.avatar_url() }}" class="post-avatar" alt="{{ post.author.username }}'s avatar">
+                                </a>
+                                <div class="post-meta">
+                                    <a href="{{ url_for('blog.user', username=post.author.username) }}" class="text-decoration-none">
+                                        <h5 class="post-username">{{ post.author.username }}</h5>
+                                    </a>
+                                    <p class="post-timestamp">
+                                        <i class="far fa-clock me-1"></i>
+                                        {{ post.timestamp.strftime('%b %d, %Y • %I:%M %p') }}
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            <div class="post-content">
+                                {{ post.body }}
+                            </div>
+                            
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="post-interactions">
+                                    {% if current_user.has_liked_post(post) %}
+                                        <button class="btn btn-sm btn-outline-secondary action-btn like-btn" data-post-id="{{ post.id }}" data-liked="1">
+                                            <i class="fas fa-heart text-danger"></i> <span>{{ post.get_likes_count() }}</span>
+                                        </button>
+                                    {% else %}
+                                        <button class="btn btn-sm btn-outline-secondary action-btn like-btn" data-post-id="{{ post.id }}" data-liked="0">
+                                            <i class="far fa-heart"></i> <span>{{ post.get_likes_count() }}</span>
+                                        </button>
+                                    {% endif %}
+                                    <a href="{{ url_for('blog.view_post', post_id=post.id) }}" class="btn btn-sm btn-outline-secondary action-btn comment-btn">
+                                        <i class="far fa-comment"></i> <span>{{ post.get_comments_count() }}</span>
+                                    </a>
+                                </div>
+                                
+                                {% if post.author == current_user %}
+                                    <div class="post-actions">
+                                        <a href="{{ url_for('blog.edit', id=post.id) }}" class="btn btn-sm btn-outline-secondary action-btn">
+                                            <i class="fas fa-edit"></i> Edit
+                                        </a>
+                                        <form action="{{ url_for('blog.delete', id=post.id) }}" method="post" class="d-inline">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger action-btn" 
+                                                onclick="return confirm('Are you sure you want to delete this post?');">
+                                                <i class="fas fa-trash-alt"></i> Delete
+                                            </button>
+                                        </form>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Quick comment link if the post has comments -->
+                            {% if post.get_comments_count() > 0 %}
+                                <div class="mt-3 px-2">
+                                    <a href="{{ url_for('blog.view_post', post_id=post.id) }}" class="text-decoration-none text-muted">
+                                        <small>
+                                            <i class="fas fa-reply fa-flip-horizontal me-1"></i>
+                                            View {{ post.get_comments_count() }} 
+                                            {{ 'comment' if post.get_comments_count() == 1 else 'comments' }}
+                                        </small>
+                                    </a>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+            
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination">
+                    {% if posts.has_prev %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('blog.explore', page=posts.prev_num) }}" aria-label="Previous">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                    {% endif %}
+                    
+                    {% for page_num in posts.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                        {% if page_num %}
+                            <li class="page-item {% if page_num == posts.page %}active{% endif %}">
+                                <a class="page-link" href="{{ url_for('blog.explore', page=page_num) }}">{{ page_num }}</a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">...</span>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if posts.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('blog.explore', page=posts.next_num) }}" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        {% else %}
+            <div class="empty-posts" data-aos="fade-up">
+                <i class="fas fa-globe"></i>
+                <h4>No posts to explore</h4>
+                <p class="text-muted">There are no posts from any users yet.</p>
+            </div>
+        {% endif %}
+    </div>
+    
+    <div class="col-lg-4 d-none d-lg-block">
+        <div class="sidebar">
+            <div class="card sidebar-card" data-aos="fade-left">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fas fa-info-circle me-2"></i>About Explore</h5>
+                    <p class="card-text">Discover posts from all Microblog users. Follow interesting people and join the conversation!</p>
+                </div>
+            </div>
+            
+            <div class="card sidebar-card" data-aos="fade-left" data-aos-delay="200">
+                <div class="card-body">
+                    <h5 class="card-title"><i class="fas fa-lightbulb me-2"></i>Want to share?</h5>
+                    <p class="card-text">Head to the <a href="{{ url_for('blog.index') }}">home page</a> to create your own post!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Post like functionality with AJAX
+        const likeButtons = document.querySelectorAll('.like-btn');
+        likeButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const postId = this.getAttribute('data-post-id');
+                const isLiked = this.getAttribute('data-liked') === '1';
+                const icon = this.querySelector('i');
+                const count = this.querySelector('span');
+                const url = isLiked 
+                    ? `/unlike/${postId}` 
+                    : `/like/${postId}`;
+                
+                // Send AJAX request
+                fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'same-origin'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Update like count
+                        count.textContent = data.likes_count;
+                        
+                        // Toggle like status
+                        if (isLiked) {
+                            icon.classList.remove('fas', 'text-danger');
+                            icon.classList.add('far');
+                            this.setAttribute('data-liked', '0');
+                        } else {
+                            icon.classList.remove('far');
+                            icon.classList.add('fas', 'text-danger');
+                            this.setAttribute('data-liked', '1');
+                        }
+                        
+                        // Add a little bounce animation
+                        button.style.transform = 'scale(1.2)';
+                        setTimeout(() => {
+                            button.style.transform = 'scale(1)';
+                        }, 200);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            });
+        });
+    });
+</script>
+{% endblock %}
